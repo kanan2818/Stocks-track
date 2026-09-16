@@ -24,15 +24,19 @@ import { db }             from '../firebase';
 import { uid, deriveProduct } from '../utils';
 
 /* ── Hook ─────────────────────────────────────────────────────────────────── */
-export function useProducts() {
+export function useProducts(userId) {
   const [raw,            setRaw]            = useState([]);
   const [loading,        setLoading]        = useState(true);
   const [firestoreError, setFirestoreError] = useState(null);
 
   const colRef = collection(db, 'products');
 
-  /* ── Real-time listener ──────────────────────────────────────────────── */
+  /* ── Real-time listener — only starts once auth is confirmed ────────── */
   useEffect(() => {
+    // userId is undefined while auth is still initialising,
+    // and null when signed out. Wait until it's a real string.
+    if (!userId) return;
+
     const unsub = onSnapshot(
       colRef,
       snap => {
@@ -47,8 +51,8 @@ export function useProducts() {
         setLoading(false);
       }
     );
-    return unsub; // unsubscribe on unmount
-  }, []);
+    return unsub;
+  }, [userId]); // re-run whenever the authenticated user changes
 
   /* ── Add a new product ───────────────────────────────────────────────── */
   const addProduct = async ({ openingQty = 0, ...fields }) => {

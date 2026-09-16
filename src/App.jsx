@@ -29,7 +29,7 @@ export default function App() {
 
   /* ── Data layer ────────────────────────────────────────────────────────── */
   const { products, loading, firestoreError, addProduct, editProduct, deleteProduct, addTransaction } =
-    useProducts();
+    useProducts(user?.uid); // only starts listener once auth token is confirmed
 
   /* ── UI state ──────────────────────────────────────────────────────────── */
   const [activeCategory,   setActiveCategory]   = useState('All');
