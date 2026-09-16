@@ -9,9 +9,6 @@ const CAT_BADGE = {
 
 export default function ProductTable({
   products,
-  pinnedProductId,
-  onRowHover,
-  onRowClick,
   onEdit,
   onStockIn,
   onStockOut,
@@ -33,148 +30,244 @@ export default function ProductTable({
   }
 
   return (
-    <div className="table-card">
-      <div className="table-scroll">
-        <table className="product-table" aria-label="Product stock list">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Category</th>
-              <th>Thickness</th>
-              <th>Size</th>
-              <th>Supplier</th>
-              <th>Qty</th>
-              <th>Area</th>
-              <th>Value</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="products-tbody">
-            {products.map(p => {
-              const isPinned  = p.id === pinnedProductId;
-              const isLow     = p.isLowStock;
-              const qtyClass  = isLow ? 'cell-qty cell-qty--low' : 'cell-qty cell-qty--ok';
+    <>
+      {/* ── Desktop Table (hidden on mobile) ── */}
+      <div className="table-card desktop-only">
+        <div className="table-scroll">
+          <table className="product-table" aria-label="Product stock list">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Thickness</th>
+                <th>Size</th>
+                <th>Supplier</th>
+                <th>Qty</th>
+                <th>Area</th>
+                <th>Value</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody">
+              {products.map(p => {
+                const isLow     = p.isLowStock;
+                const qtyClass  = isLow ? 'cell-qty cell-qty--low' : 'cell-qty cell-qty--ok';
 
-              let rowClass = '';
-              if (isPinned)  rowClass += ' row--pinned';
-              if (isLow)     rowClass += ' row--lowstock';
+                let rowClass = '';
+                if (isLow)     rowClass += ' row--lowstock';
 
-              return (
-                <tr
-                  key={p.id}
-                  className={rowClass.trim()}
-                  onMouseEnter={() => onRowHover(p)}
-                  onMouseLeave={() => onRowHover(null)}
-                  onClick={() => onRowClick(p)}
-                  title="Click to pin this product to the Quick-Check card"
-                >
-                  {/* Name */}
-                  <td>
-                    <div className="cell-name">{p.name}</div>
-                    {isLow && (
-                      <span className="badge badge--low" style={{ marginTop: 3 }}>
-                        ⚠ LOW
+                return (
+                  <tr
+                    key={p.id}
+                    className={rowClass.trim()}
+                  >
+                    {/* Name */}
+                    <td>
+                      <div className="cell-name">{p.name}</div>
+                      {isLow && (
+                        <span className="badge badge--low" style={{ marginTop: 3 }}>
+                          ⚠ LOW
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Category */}
+                    <td>
+                      <span className={`badge ${CAT_BADGE[p.category] ?? ''}`}>
+                        {p.category}
                       </span>
-                    )}
-                  </td>
+                    </td>
 
-                  {/* Category */}
-                  <td>
-                    <span className={`badge ${CAT_BADGE[p.category] ?? ''}`}>
-                      {p.category}
-                    </span>
-                  </td>
+                    {/* Thickness */}
+                    <td className="cell-muted">
+                      {p.thickness ? `${p.thickness} ${p.thicknessUnit}` : '—'}
+                    </td>
 
-                  {/* Thickness */}
-                  <td className="cell-muted">
-                    {p.thickness ? `${p.thickness} ${p.thicknessUnit}` : '—'}
-                  </td>
+                    {/* Size */}
+                    <td className="cell-muted">
+                      {p.size ? `${p.size} ${p.sizeUnit}` : '—'}
+                    </td>
 
-                  {/* Size */}
-                  <td className="cell-muted">
-                    {p.size ? `${p.size} ${p.sizeUnit}` : '—'}
-                  </td>
+                    {/* Supplier */}
+                    <td className="cell-muted">{p.supplier || '—'}</td>
 
-                  {/* Supplier */}
-                  <td className="cell-muted">{p.supplier || '—'}</td>
+                    {/* Quantity */}
+                    <td>
+                      <span className={qtyClass}>
+                        {p.currentQty.toLocaleString('en-IN')}
+                      </span>
+                    </td>
 
-                  {/* Quantity */}
-                  <td>
-                    <span className={qtyClass}>
-                      {p.currentQty.toLocaleString('en-IN')}
-                    </span>
-                  </td>
+                    {/* Area */}
+                    <td className="cell-muted">
+                      {p.totalArea != null
+                        ? fmtArea(p.totalArea, p.areaUnit)
+                        : '—'}
+                    </td>
 
-                  {/* Area */}
-                  <td className="cell-muted">
-                    {p.totalArea != null
-                      ? fmtArea(p.totalArea, p.areaUnit)
-                      : '—'}
-                  </td>
+                    {/* Value */}
+                    <td className="cell-value">
+                      {p.pricePerUnit
+                        ? fmtRupee(p.pricePerUnit * p.currentQty)
+                        : '—'}
+                    </td>
 
-                  {/* Value */}
-                  <td className="cell-value">
-                    {p.pricePerUnit
-                      ? fmtRupee(p.pricePerUnit * p.currentQty)
-                      : '—'}
-                  </td>
+                    {/* Actions */}
+                    <td onClick={e => e.stopPropagation()}>
+                      <div className="row-actions">
+                        <button
+                          className="action-btn action-btn--in"
+                          title="Stock In"
+                          aria-label={`Stock In: ${p.name}`}
+                          onClick={() => onStockIn(p)}
+                        >
+                          <Plus size={15} strokeWidth={2.5} />
+                        </button>
+                        <button
+                          className="action-btn action-btn--out"
+                          title="Stock Out"
+                          aria-label={`Stock Out: ${p.name}`}
+                          onClick={() => onStockOut(p)}
+                        >
+                          <Minus size={15} strokeWidth={2.5} />
+                        </button>
+                        <button
+                          className="action-btn"
+                          title="Edit product"
+                          aria-label={`Edit ${p.name}`}
+                          onClick={() => onEdit(p)}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          className="action-btn"
+                          title="Transaction history"
+                          aria-label={`History: ${p.name}`}
+                          onClick={() => onHistory(p)}
+                        >
+                          <ClipboardList size={15} />
+                        </button>
+                        <button
+                          className="action-btn action-btn--delete"
+                          title="Delete product"
+                          aria-label={`Delete ${p.name}`}
+                          onClick={() => onDelete(p)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-                  {/* Actions */}
-                  <td onClick={e => e.stopPropagation()}>
-                    <div className="row-actions">
-                      <button
-                        className="action-btn action-btn--in"
-                        title="Stock In"
-                        aria-label={`Stock In: ${p.name}`}
-                        onClick={() => onStockIn(p)}
-                      >
-                        <Plus size={15} strokeWidth={2.5} />
-                      </button>
-                      <button
-                        className="action-btn action-btn--out"
-                        title="Stock Out"
-                        aria-label={`Stock Out: ${p.name}`}
-                        onClick={() => onStockOut(p)}
-                      >
-                        <Minus size={15} strokeWidth={2.5} />
-                      </button>
-                      <button
-                        className="action-btn"
-                        title="Edit product"
-                        aria-label={`Edit ${p.name}`}
-                        onClick={() => onEdit(p)}
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        className="action-btn"
-                        title="Transaction history"
-                        aria-label={`History: ${p.name}`}
-                        onClick={() => onHistory(p)}
-                      >
-                        <ClipboardList size={15} />
-                      </button>
-                      <button
-                        className="action-btn action-btn--delete"
-                        title="Delete product"
-                        aria-label={`Delete ${p.name}`}
-                        onClick={() => onDelete(p)}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {/* Footer */}
+        <div className="table-footer" id="footer-count">
+          Showing {products.length} product{products.length !== 1 ? 's' : ''}
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="table-footer" id="footer-count">
-        Showing {products.length} product{products.length !== 1 ? 's' : ''}
+      {/* ── Mobile Card Layout (hidden on desktop) ── */}
+      <div className="mobile-cards mobile-only">
+        {products.map(p => {
+          const isLow    = p.isLowStock;
+          const qtyClass = isLow ? 'cell-qty cell-qty--low' : 'cell-qty cell-qty--ok';
+
+          return (
+            <div key={p.id} className={`mobile-card${isLow ? ' mobile-card--low' : ''}`}>
+              {/* Card header */}
+              <div className="mobile-card-header">
+                <div className="mobile-card-title">
+                  <span className="cell-name">{p.name}</span>
+                  <span className={`badge ${CAT_BADGE[p.category] ?? ''}`}>
+                    {p.category}
+                  </span>
+                  {isLow && <span className="badge badge--low">⚠ LOW</span>}
+                </div>
+                <div className={qtyClass} style={{ fontSize: '1.25rem' }}>
+                  {p.currentQty.toLocaleString('en-IN')}
+                  <span className="mobile-card-unit"> pcs</span>
+                </div>
+              </div>
+
+              {/* Card details */}
+              <div className="mobile-card-details">
+                {p.thickness && (
+                  <div className="mobile-card-detail">
+                    <span className="mobile-card-label">Thickness</span>
+                    <span>{p.thickness} {p.thicknessUnit}</span>
+                  </div>
+                )}
+                {p.size && (
+                  <div className="mobile-card-detail">
+                    <span className="mobile-card-label">Size</span>
+                    <span>{p.size} {p.sizeUnit}</span>
+                  </div>
+                )}
+                {p.supplier && (
+                  <div className="mobile-card-detail">
+                    <span className="mobile-card-label">Supplier</span>
+                    <span>{p.supplier}</span>
+                  </div>
+                )}
+                {p.pricePerUnit > 0 && (
+                  <div className="mobile-card-detail">
+                    <span className="mobile-card-label">Value</span>
+                    <span>{fmtRupee(p.pricePerUnit * p.currentQty)}</span>
+                  </div>
+                )}
+                {p.totalArea != null && (
+                  <div className="mobile-card-detail">
+                    <span className="mobile-card-label">Area</span>
+                    <span>{fmtArea(p.totalArea, p.areaUnit)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Card actions */}
+              <div className="mobile-card-actions">
+                <button
+                  className="mobile-action mobile-action--in"
+                  onClick={() => onStockIn(p)}
+                >
+                  <Plus size={16} strokeWidth={2.5} /> In
+                </button>
+                <button
+                  className="mobile-action mobile-action--out"
+                  onClick={() => onStockOut(p)}
+                >
+                  <Minus size={16} strokeWidth={2.5} /> Out
+                </button>
+                <button
+                  className="mobile-action"
+                  onClick={() => onEdit(p)}
+                >
+                  <Pencil size={14} /> Edit
+                </button>
+                <button
+                  className="mobile-action"
+                  onClick={() => onHistory(p)}
+                >
+                  <ClipboardList size={14} /> History
+                </button>
+                <button
+                  className="mobile-action mobile-action--delete"
+                  onClick={() => onDelete(p)}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="table-footer" id="footer-count-mobile">
+          Showing {products.length} product{products.length !== 1 ? 's' : ''}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

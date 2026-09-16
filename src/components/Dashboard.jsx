@@ -1,7 +1,7 @@
-import { Package, Layers, IndianRupee, AlertTriangle, MousePointer2 } from 'lucide-react';
+import { Package, Layers, IndianRupee, AlertTriangle } from 'lucide-react';
 import { fmtRupee } from '../utils';
 
-export default function Dashboard({ stats, quickCheckProduct, pinnedProductId }) {
+export default function Dashboard({ stats }) {
   const { totalProducts, totalUnits, totalValue, lowStockCount } = stats;
 
   return (
@@ -51,35 +51,6 @@ export default function Dashboard({ stats, quickCheckProduct, pinnedProductId })
         <div className="kpi-subtext">
           {lowStockCount === 0 ? 'all levels OK' : `product${lowStockCount !== 1 ? 's' : ''} need restocking`}
         </div>
-      </div>
-
-      {/* Units Quick-Check */}
-      <div className="kpi-card kpi-card--units-check" id="kpi-units-check">
-        <div className="kpi-label">
-          <MousePointer2 size={12} style={{ display:'inline', marginRight:5 }} />
-          Units Quick-Check
-          {pinnedProductId && (
-            <span style={{ marginLeft:6, color:'var(--green)', fontStyle:'italic', textTransform:'none', letterSpacing:0 }}>
-              · pinned
-            </span>
-          )}
-        </div>
-
-        {quickCheckProduct ? (
-          <div className="units-check-body">
-            <div className="units-check-name">{quickCheckProduct.name}</div>
-            <div className="units-check-qty">{quickCheckProduct.currentQty.toLocaleString('en-IN')}</div>
-            <div className="kpi-subtext">
-              {quickCheckProduct.isLowStock
-                ? '⚠️ Low stock — reorder soon'
-                : 'units remaining'}
-            </div>
-          </div>
-        ) : (
-          <p className="units-check-empty">
-            Hover any product row to see its live quantity, or click to pin it here.
-          </p>
-        )}
       </div>
 
     </section>

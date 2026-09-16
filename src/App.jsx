@@ -34,8 +34,7 @@ export default function App() {
   /* ── UI state ──────────────────────────────────────────────────────────── */
   const [activeCategory,   setActiveCategory]   = useState('All');
   const [searchQuery,      setSearchQuery]       = useState('');
-  const [pinnedProductId,  setPinnedProductId]   = useState(null);
-  const [hoveredProductId, setHoveredProductId]  = useState(null);
+
 
   /* ── Modal state ───────────────────────────────────────────────────────── */
   const [productModal, setProductModal] = useState({ open: false, product: null });
@@ -70,10 +69,7 @@ export default function App() {
     lowStockCount: lowStockProducts.length,
   }), [products, lowStockProducts]);
 
-  const quickCheckProduct = useMemo(() => {
-    const id = pinnedProductId || hoveredProductId;
-    return id ? (products.find(p => p.id === id) ?? null) : null;
-  }, [pinnedProductId, hoveredProductId, products]);
+
 
   /* ── Handlers ──────────────────────────────────────────────────────────── */
   const handleProductSave = (data) => {
@@ -91,14 +87,10 @@ export default function App() {
     const id = deleteModal.product?.id;
     if (!id) return;
     deleteProduct(id);
-    if (pinnedProductId === id) setPinnedProductId(null);
     setDeleteModal({ open: false, product: null });
   };
 
-  const handleRowHover = (product) => setHoveredProductId(product?.id ?? null);
-  const handleRowClick = (product) => {
-    setPinnedProductId(prev => prev === product.id ? null : product.id);
-  };
+
 
   /* ── Auth gate ─────────────────────────────────────────────────────────── */
 
@@ -128,13 +120,12 @@ export default function App() {
           <h1 className="header-title">Stocks</h1>
           <p className="header-subtitle">Plywood &amp; Panels Register</p>
         </div>
-        <div style={{ display:'flex', gap:'var(--space-3)', alignItems:'center' }}>
-          <span style={{ fontSize:'0.8125rem', color:'var(--green-muted)' }}>
+        <div className="header-actions">
+          <span className="header-email">
             {user.email}
           </span>
           <button
-            className="btn btn-ghost"
-            style={{ height:36, color:'var(--green-muted)', borderColor:'rgba(255,255,255,0.2)', fontSize:'0.875rem' }}
+            className="btn btn-ghost header-signout"
             onClick={() => signOut(auth)}
           >
             Sign out
@@ -157,11 +148,7 @@ export default function App() {
           <LowStockBanner products={lowStockProducts} />
         )}
 
-        <Dashboard
-          stats={stats}
-          quickCheckProduct={quickCheckProduct}
-          pinnedProductId={pinnedProductId}
-        />
+        <Dashboard stats={stats} />
 
         <div className="toolbar">
           <CategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
@@ -205,9 +192,6 @@ service cloud.firestore {
         ) : (
           <ProductTable
             products={visibleProducts}
-            pinnedProductId={pinnedProductId}
-            onRowHover={handleRowHover}
-            onRowClick={handleRowClick}
             onEdit    ={(p) => setProductModal({ open: true,  product: p })}
             onStockIn ={(p) => setStockModal  ({ open: true,  product: p, type: 'in' })}
             onStockOut={(p) => setStockModal  ({ open: true,  product: p, type: 'out' })}
